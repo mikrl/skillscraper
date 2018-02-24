@@ -1,0 +1,16 @@
+This project is a web scraper for indeed.ca, a job listings site that enumerates all
+possible ngrams over a search and returns the top 20 monograms to quadgrams.
+
+The motivation comes from the difficulty in getting interviews from sending out resumes,
+as well as the lack of feedback from companies to unsuccessful applicants.
+
+I hope this project is used in both of these manners:
+
+1. Candidates will find the right words to express their skills and get interviews
+2. Candidates will be able to find the most in demand skills and learn them
+
+###########################################################################################
+
+This project is written in Python3 and uses the BeautifulSoup and nltk libraries.
+Since I am using Arch Linux and my global python install may be different to yours,
+I have attached a file requirements.txt to show you what you need.
