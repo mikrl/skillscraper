@@ -1,4 +1,3 @@
-#!/home/michael/venvs/nlp/bin/python3
 import urllib.request
 from bs4 import BeautifulSoup
 import hashlib
@@ -8,7 +7,7 @@ import time
 from random import random
 
 REQUEST_DELAY = 1.0 #request delay in seconds
-SEARCH_PARAMS = {"and":"", #matches ANDed results
+SEARCH_PARAMS = {"and":"analyst", #matches ANDed results
                  "phr":"", #matches exact phrase
                  "any":"", #matches ORed results
                  "not":"", #matches NOT results
