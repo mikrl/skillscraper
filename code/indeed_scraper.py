@@ -119,8 +119,22 @@ def getRawHTML(url):
 def getListingText(raw_html):
 
     soup = BeautifulSoup(raw_html, 'lxml', from_encoding='utf-8')
-    job_summary = soup.find("span", {"id":"job_summary"})
-        
+    job_summary = soup.find("div", {"class":"jobsearch-JobComponent-description icl-u-xs-mt--md"})#.get_text()
+    print(u' '.join(job_summary.findAll(text=True)))
+    #print("\n\n\n")
+    #print(u' '.join(soup.findAll(text=True)))
+    """
+    print(type(job_summary))
+    for i, el in enumerate(job_summary):
+        print(i+1," ",el)
+    #job_summary = soup.find("span", {"id":"job_summary"})
+    #print(raw_html)
+    #print(job_summary)
+    """
+    #print(str(job_summary))
+    print("################################")
+    
+    #input()
     return str(job_summary.get_text().encode('utf-8'))
 
 def aggregate(inp_str, inp_dict):
