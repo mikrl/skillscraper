@@ -126,17 +126,11 @@ def getRawHTML(url):
 def parseAd(raw_html):
 
     soup = BeautifulSoup(raw_html, 'lxml', from_encoding='utf-8')
-    #print(soup)
-    #breakpoint()
-    print(soup.find("h3", class_=re.compile("title")).get_text())
-    print(soup.find("div"))
-    print(soup.find("div", class_=re.compile("jobComponent-description")))#.get_text())
-    #print(soup.find("div")
-    #breakpoint()
-    #job_title = soup.find("h", {"class":"icl-u-xs-mb--xs 
-    job_summary = soup.find("div", {"class":"jobsearch-JobComponent-description icl-u-xs-mt--md"}).get_text()
+    
+    job_title = soup.find("h3", {"class":re.compile("JobInfoHeader-title")}).get_text()
+    job_company = soup.find("div", {"class":re.compile("icl-u-lg-mr")}).get_text() 
+    job_summary = soup.find("div", {"class":re.compile("JobComponent-description")}).get_text()
     #print(job_summary)
-    job_date = None
     breakpoint()
     return str(job_summary.get_text().encode('utf-8'))
 
