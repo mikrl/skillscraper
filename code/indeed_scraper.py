@@ -116,27 +116,31 @@ def getRawHTML(url):
 
     return raw_html
 
-def getListingText(raw_html):
+### Data cleaning ###
+# Turns raw HTML code from indeed into a simple job listing
+# in the form
+#   ['title', 'company', 'listing text', 'listing hash', 'date']
+# for exportation to a database
+#################
+
+def parseAd(raw_html):
 
     soup = BeautifulSoup(raw_html, 'lxml', from_encoding='utf-8')
-    job_summary = soup.find("div", {"class":"jobsearch-JobComponent-description icl-u-xs-mt--md"})#.get_text()
-    print(u' '.join(job_summary.findAll(text=True)))
-    #print("\n\n\n")
-    #print(u' '.join(soup.findAll(text=True)))
-    """
-    print(type(job_summary))
-    for i, el in enumerate(job_summary):
-        print(i+1," ",el)
-    #job_summary = soup.find("span", {"id":"job_summary"})
-    #print(raw_html)
+    #print(soup)
+    #breakpoint()
+    print(soup.find("h3", class_=re.compile("title")).get_text())
+    print(soup.find("div"))
+    print(soup.find("div", class_=re.compile("jobComponent-description")))#.get_text())
+    #print(soup.find("div")
+    #breakpoint()
+    #job_title = soup.find("h", {"class":"icl-u-xs-mb--xs 
+    job_summary = soup.find("div", {"class":"jobsearch-JobComponent-description icl-u-xs-mt--md"}).get_text()
     #print(job_summary)
-    """
-    #print(str(job_summary))
-    print("################################")
-    
-    #input()
+    job_date = None
+    breakpoint()
     return str(job_summary.get_text().encode('utf-8'))
 
+#################
 def aggregate(inp_str, inp_dict):
 
     outp_dict = inp_dict
@@ -190,16 +194,17 @@ def main():
         print("[*]Grabbing results {0} through {1}".format(result, result+50))
         politelyWait()
 
-        search_html=getRawHTML(init_search+"&start={0}".format(result))
-        url_list+=grabListings(search_html)
+        search_html = getRawHTML(init_search+"&start={0}".format(result))
+        url_list+= grabListings(search_html)
 
+    
     total_links = len(url_list)
     url_list = set(url_list)
     unique_links = len(url_list)
-    discarded_links=total_links-unique_links
+    discarded_links = total_links-unique_links
     
-    listing_hashes=[]
-    duplicates=0
+    listing_hashes = []
+    duplicates = 0
     
 
     monograms = {}
@@ -207,8 +212,8 @@ def main():
     trigrams = {}
     quadgrams = {}
 
-    
     print("[*]{0} overlapping search results found and discarded".format(discarded_links))
+
     for idx, url in enumerate(url_list):
 
         politelyWait()
@@ -217,14 +222,11 @@ def main():
         if idx%20 == 0:
             print("[*]Processing listing {0} of {1}".format(idx+1, unique_links))
         
-        listing_body = getListingText(listing_html)
-
+        ad_datum = parseAd(listing_html) #store this to a database
         cleaned_text = cleanText(listing_body)
         
         listing_hash = hashlib.md5(cleaned_text.encode('utf-8')).hexdigest()
 
-
-        
         if listing_hash not in listing_hashes:
 
             listing_hashes.append(listing_hash)
@@ -253,16 +255,19 @@ def main():
 
         
     plural = lambda p: "" if duplicates==1 else "s"
+
     print("[*]Processed {0} listings".format(unique_links))
     print("[*]{0} duplicate{1} found and ignored".format(duplicates, plural(duplicates)))
+
     print(len(monograms), len(bigrams), len(trigrams), len(quadgrams))
-    input()
+
+    #  input()
     getTopItems(monograms)
-    input()
+    #input()
     getTopItems(bigrams)
-    input()
+    #input()
     getTopItems(trigrams)
-    input()
+    #input()
     getTopItems(quadgrams)
     """
     input()
@@ -280,7 +285,7 @@ def main():
     """
 
 ################################################################################
-
+#breakpoint()
 main()
 
 """
