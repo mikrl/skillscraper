@@ -68,21 +68,7 @@ def constructSearchURL():
     
     return url
 
-#################################################
-# Following function cleans the html body       #
-# for n-gram analysis                           #
-#################################################
-def cleanText(inp_string):
 
-    round1 = re.sub(r'[^a-zA-Z0-9\n\\]', " ", inp_string) #removes non alphanumeric chars
-    round2 = round1.lower() #sends text to lowercase
-    round3 = re.sub(r'\\x..', "", round2) #removes pesky byte encodings
-    round4 = re.sub(r'\\n', " ", round3) #removes pesky leftover newlines
-    round5 = re.sub(r'[ ]{2,}', " ", round4)#replaces multiple spaces with one space
-
-    out_string = round5
-    
-    return out_string
     
 #################################################
 # Following function grabs the URLs of the job  #
@@ -119,7 +105,7 @@ def getRawHTML(url):
 ### Data cleaning ###
 # Turns raw HTML code from indeed into a simple job listing
 # in the form
-#   ['title', 'company', 'listing text', 'listing hash', 'date']
+#   ['search term', 'title', 'company', 'listing text', 'listing hash']
 # for exportation to a database
 #################
 
@@ -130,10 +116,25 @@ def parseAd(raw_html):
     job_title = soup.find("h3", {"class":re.compile("JobInfoHeader-title")}).get_text()
     job_company = soup.find("div", {"class":re.compile("icl-u-lg-mr")}).get_text() 
     job_summary = soup.find("div", {"class":re.compile("JobComponent-description")}).get_text()
-    #print(job_summary)
-    breakpoint()
-    return str(job_summary.get_text().encode('utf-8'))
 
+    #print(job_title, job_company, job_summary)
+    return [SEARCH_PARAMS["and"], job_title, job_company, job_summary]
+
+# Following function cleans the job  post       #
+# for n-gram analysis                           #
+
+def cleanText(inp_string):
+
+    round1 = re.sub(r'[^a-zA-Z0-9\n\\]', " ", inp_string) #removes non alphanumeric chars
+    round2 = round1.lower() #sends text to lowercase
+    round3 =round2 #= re.sub(r'\\x..', "", round2) #removes pesky byte encodings #testing without removing the encodings
+    round4 = re.sub(r'\n', " ", round3) #removes pesky leftover newlines
+    round5 = re.sub(r'[ ]{2,}', " ", round4)#replaces multiple spaces with one space
+
+    out_string = round5
+    #breakpoint()
+    
+    return out_string
 #################
 def aggregate(inp_str, inp_dict):
 
@@ -153,9 +154,8 @@ def getTopItems(inp_dict, topN=20): #given input dict, return list of top N item
     outp_list=sorted(inp_dict, key=inp_dict.get  , reverse=True)
     for i in range(topN):
         print(outp_list[i], inp_dict[outp_list[i]])
-
-    
-    #return outp_list[]
+        
+    return outp_list[:topN]
 
 def main():
 
@@ -183,11 +183,10 @@ def main():
         
         print("[*]{0} results found".format(num_results))
 
-    for result in range(50, num_results, 50):
+    for itr, result in enumerate(range(50, num_results, 50)):
 
         print("[*]Grabbing results {0} through {1}".format(result, result+50))
-        politelyWait()
-
+        if itr !=0: politelyWait()
         search_html = getRawHTML(init_search+"&start={0}".format(result))
         url_list+= grabListings(search_html)
 
@@ -210,15 +209,17 @@ def main():
 
     for idx, url in enumerate(url_list):
 
-        politelyWait()
+        if idx !=0: politelyWait()
         listing_html = getRawHTML("https://www.indeed.ca/viewjob?jk={0}".format(url))
 
         if idx%20 == 0:
             print("[*]Processing listing {0} of {1}".format(idx+1, unique_links))
         
         ad_datum = parseAd(listing_html) #store this to a database
-        cleaned_text = cleanText(listing_body)
+        #print(ad_datum)
         
+        cleaned_text = cleanText(ad_datum[3])
+        #breakpoint()
         listing_hash = hashlib.md5(cleaned_text.encode('utf-8')).hexdigest()
 
         if listing_hash not in listing_hashes:
@@ -263,6 +264,7 @@ def main():
     getTopItems(trigrams)
     #input()
     getTopItems(quadgrams)
+    
     """
     input()
     print(monograms)
