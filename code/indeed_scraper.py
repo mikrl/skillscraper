@@ -1,4 +1,5 @@
 import urllib.request
+import sqlite3
 from bs4 import BeautifulSoup
 import hashlib
 from nltk.util import everygrams
@@ -207,6 +208,13 @@ def main():
 
     print("[*]{0} overlapping search results found and discarded".format(discarded_links))
 
+    # Code for setting up SQLite database
+    #database = sqlite3.connect('../data/results.db')
+    database = sqlite3.connect(':memory:')
+    db = database.cursor()
+    db.execute('''CREATE TABLE raw_listings (title TEXT, company TEXT, listing TEXT, lhash BLOB)''')
+    print("[*] Database created ")
+    breakpoint()
     for idx, url in enumerate(url_list):
 
         if idx !=0: politelyWait()
@@ -214,7 +222,7 @@ def main():
 
         if idx%20 == 0:
             print("[*]Processing listing {0} of {1}".format(idx+1, unique_links))
-        
+    
         ad_datum = parseAd(listing_html) #store this to a database
         #print(ad_datum)
         
