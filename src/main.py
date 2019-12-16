@@ -65,12 +65,11 @@ def constructSearchURL():
            "limit={12}&"
            "sort={13}&"
            "psf=advsrch&"
-           "filter=0").format(as_and, as_phr, as_any, as_not, as_ttl, as_cmp, jt, st, salary, radius, l, fromage, limit, sort)
+           "filter=0").format(as_and, as_phr, as_any, as_not, as_ttl, as_cmp,
+                              jt, st, salary, radius, l, fromage, limit, sort)
     
     return url
 
-
-    
 #################################################
 # Following function grabs the URLs of the job  #
 # listings and adds them to a queue             #
