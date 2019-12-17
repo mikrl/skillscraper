@@ -1,4 +1,6 @@
-This project is a web scraper for indeed.ca, a job listings site that enumerates all
+Released under v3 of the GGPL
+
+This project is a web scraper for indeed.ca that enumerates all
 possible ngrams over a search and returns the top 20 monograms to quadgrams.
 
 The motivation comes from the difficulty in getting interviews from sending out resumes,
