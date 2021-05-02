@@ -16,21 +16,6 @@ def politelyWait():
     time.sleep(random()*REQUEST_DELAY)
 
 
-# Following function cleans the job  post       #
-# for n-gram analysis                           #
-
-def cleanText(inp_string):
-
-    round1 = re.sub(r'[^a-zA-Z0-9\n\\]', " ", inp_string) #removes non alphanumeric chars
-    round2 = round1.lower() #sends text to lowercase
-    round3 =round2 #= re.sub(r'\\x..', "", round2) #removes pesky byte encodings #testing without removing the encodings
-    round4 = re.sub(r'\n', " ", round3) #removes pesky leftover newlines
-    round5 = re.sub(r'[ ]{2,}', " ", round4)#replaces multiple spaces with one space
-
-    out_string = round5
-    #breakpoint()
-    
-    return out_string
 #################
 def aggregate(inp_str, inp_dict):
 
@@ -66,17 +51,16 @@ def main():
                        "lim": "50",
                        "sort": "date"}
 
-    search_html = search.get_search_html(waterloo_search)
+    first_page_search_html = search.get_search_html(waterloo_search)
     
-    url_list = IndeedURLExtractor.listing_urls(search_html)
-    num_results =  IndeedURLExtractor.get_result_count(search_html)
+    url_list = IndeedURLExtractor.listing_urls(first_page_search_html)
+    num_results = IndeedURLExtractor.get_result_count(first_page_search_html)
     
     monograms = []
     bigrams = []
     trigrams = []
     
     if num_results>1000:
-        
         print("[*]{0} results found, searching first 1000".format(num_results))
         num_results=951
 
