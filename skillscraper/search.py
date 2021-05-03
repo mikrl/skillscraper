@@ -4,20 +4,21 @@ import urllib
 
 class IndeedSearch:
 
-    self._search_params = {"and":"", #matches ANDed results
-                           "phr":"", #matches exact phrase
-                           "any":"", #matches ORed results
-                           "not":"", #matches NOT results
-                           "ttl":"", #matches in title
-                           "cmp":"", #matches company
-                           "jt":"",  #job type (part time etc), default is all
-                           "st":"",  #job source
-                           "sal":"", #salary est
-                           "rad":"", #radius of x kilometers
-                           "loc":"", #from location
-                           "age":"", #15, 7, 3, any are most useful
-                           "lim":"", #50 is max
-                           "sort":""} #default is sort="" for relevance sort
+    def __init__(self):
+        self._search_params = {"and":"", #matches ANDed results
+                               "phr":"", #matches exact phrase
+                               "any":"", #matches ORed results
+                               "not":"", #matches NOT results
+                               "ttl":"", #matches in title
+                               "cmp":"", #matches company
+                               "jt":"",  #job type (part time etc), default is all
+                               "st":"",  #job source
+                               "sal":"", #salary est
+                               "rad":"", #radius of x kilometers
+                               "loc":"", #from location
+                               "age":"", #15, 7, 3, any are most useful
+                               "lim":"", #50 is max
+                               "sort":""} #default is sort="" for relevance sort
         
     @property
     def search_url(self) -> str:

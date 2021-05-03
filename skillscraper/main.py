@@ -1,6 +1,7 @@
-from .aggregate import Aggregator
-from .html_utils import IndeedPostInfoExtractor, IndeedURLExtractor
-from .search import IndeedSearch
+#from .aggregate import Aggregator
+from listing import IndeedListing
+from html_utils import IndeedPostInfoExtractor, IndeedSearchExtractor
+from search import IndeedSearch
 
 
 import sqlite3
@@ -16,7 +17,6 @@ def politelyWait():
     time.sleep(random()*REQUEST_DELAY)
 
 
-#################
 def aggregate(inp_str, inp_dict):
 
     outp_dict = inp_dict
@@ -39,41 +39,55 @@ def getTopItems(inp_dict, topN=20): #given input dict, return list of top N item
     return outp_list[:topN]
 
 def main():
-
     print("[*]Initializing search")
 
+    results_per_page = 15
+    
     search = IndeedSearch()
     waterloo_search = {"and": "software+engineer",
                        "jt": "all",
                        "rad": "15",
                        "loc": "Waterloo%2C+ON",
                        "age": "any",
-                       "lim": "50",
+                       "lim": str(results_per_page),
                        "sort": "date"}
 
     first_page_search_html = search.get_search_html(waterloo_search)
-    
-    url_list = IndeedURLExtractor.listing_urls(first_page_search_html)
-    num_results = IndeedURLExtractor.get_result_count(first_page_search_html)
-    
-    monograms = []
-    bigrams = []
-    trigrams = []
-    
-    if num_results>1000:
-        print("[*]{0} results found, searching first 1000".format(num_results))
-        num_results=951
 
-    else:
+    url_list = IndeedSearchExtractor().get_listing_urls(raw_html=first_page_search_html)
+    num_results = IndeedSearchExtractor().get_result_count(raw_html=first_page_search_html)
+    breakpoint()
+    url_batch_size = len(url_list)
+    if url_batch_size != results_per_page:
+        print("[!] {0} URLs retrieved but lim={1}".format(url_batch_size, results_per_page))
+        results_per_page = url_batch_size
+
+    print("[*]{0} results reported. Searched the first {1}".format(num_results, url_batch_size))
+
+    listings_serial = []
+    for listing_url in url_list:
+        politelyWait()
+        listing_html = IndeedListing().get_listing_html(listing_url)
+        listing_dict = IndeedPostInfoExtractor().parse_html(listing_html)
         
-        print("[*]{0} results found".format(num_results))
+        listings_serial.append({'url':listing_url, 'data':listing_dict})
+        # cache it here
+    breakpoint()
+    # # Disable repetition logic for now. Search first page only
+    # if num_results>1000:
+    #     print("[*]{0} results found, searching first 1000".format(num_results))
+    #     num_results=951
 
-    for itr, result in enumerate(range(50, num_results, 50)):
+    # else:
+        
+    #     print("[*]{0} results found".format(num_results))
 
-        print("[*]Grabbing results {0} through {1}".format(result, result+50))
-        if itr !=0: politelyWait()
-        search_html = getRawHTML(init_search+"&start={0}".format(result))
-        url_list+= grabListings(search_html)
+    # for itr, result in enumerate(range(50, num_results, 50)):
+
+    #     print("[*]Grabbing results {0} through {1}".format(result, result+50))
+    #     if itr !=0: politelyWait()
+    #     search_html = getRawHTML(init_search+"&start={0}".format(result))
+    #     url_list+= grabListings(search_html)
     
     total_links = len(url_list)
     url_list = set(url_list)
@@ -89,7 +103,7 @@ def main():
     quadgrams = {}
 
     print("[*]{0} overlapping search results found and discarded".format(discarded_links))
-
+    
     # Code for setting up SQLite database
     #database = sqlite3.connect('../data/results.db')
     database = sqlite3.connect(':memory:')

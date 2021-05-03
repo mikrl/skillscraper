@@ -5,7 +5,7 @@ import string
 
 class IndeedSearchExtractor:
 
-    def listing_urls(self, raw_html):
+    def get_listing_urls(self, raw_html):
         """
         Grabs the URLs of every job listing shown on a search.
         """
@@ -32,7 +32,7 @@ class IndeedSearchExtractor:
             raise NotImplementedError("Format of result count changed. \
             Cannot parse total number of search results.")
 
-        self.result_count = int(result_count[2].replace(",",""))
+        self.result_count = int(result_count[3].replace(",",""))
         return self.result_count
     
 class IndeedPostInfoExtractor:
