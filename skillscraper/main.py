@@ -62,7 +62,6 @@ def main():
         listing_1grams = map_ngrams(listing_text)
         ngram_dict.update(reduce_ngrams(listing_1grams))
     
-
     breakpoint()
 
     # Code for setting up SQLite database
