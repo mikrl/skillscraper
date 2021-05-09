@@ -14,10 +14,8 @@ services:
   scraper:
     build: .
     command: tail -F /dev/null
-    # volumes:
-    #   - .:/skillscraper
-    ports:
-      - "8000:8000"
+    volumes:
+      - .:/skillscraper
     depends_on:
       - cache
       - db
