@@ -1,15 +1,17 @@
-import sqlite3
-
 import time
 from random import random
+import logging
+
+import sqlite3
 
 from .aggregator import map_ngrams, reduce_ngrams
 from .listing import IndeedListing
 from .html_utils import IndeedPostInfoExtractor, IndeedSearchExtractor
 from .search import IndeedSearch
+from .storage import CacheConnection, Caches
 
 REQUEST_DELAY = 1.0 #request delay in seconds
-
+LOGGER = logging.getLogger("main")
 
 def politely_wait():
     time.sleep(random()*REQUEST_DELAY)
@@ -36,10 +38,19 @@ def main():
                        "lim": str(results_per_page),
                        "sort": "date"}
 
-    first_page_search_html = search.get_search_html(waterloo_search)
-
+    cache = CacheConnection()
+    
+    first_page_search_html = search.get_search_html(waterloo_search)    
     url_list = IndeedSearchExtractor().get_listing_urls(raw_html=first_page_search_html)
     num_results = IndeedSearchExtractor().get_result_count(raw_html=first_page_search_html)
+        
+    cached = [cache.cache_listing(listing_url) for listing_url in url_list]
+    unique_listings = [cached_url[0] for cached_url in zip(url_list, cached) if cached_url[1]]
+    
+    if len(cached) > len(unique_listings):
+        LOGGER.debug("Ignored %s duplicate listings." % len(cached) - len(unique_listings))
+        
+        
     breakpoint()
     url_batch_size = len(url_list)
     if url_batch_size != results_per_page:
