@@ -1,19 +1,19 @@
-from aggregator import map_ngrams, reduce_ngrams
-from listing import IndeedListing
-from html_utils import IndeedPostInfoExtractor, IndeedSearchExtractor
-from search import IndeedSearch
-
-
 import sqlite3
-import hashlib
-from nltk.util import everygrams
+
 import time
 from random import random
 
+from .aggregator import map_ngrams, reduce_ngrams
+from .listing import IndeedListing
+from .html_utils import IndeedPostInfoExtractor, IndeedSearchExtractor
+from .search import IndeedSearch
+
 REQUEST_DELAY = 1.0 #request delay in seconds
 
-def politelyWait():
+
+def politely_wait():
     time.sleep(random()*REQUEST_DELAY)
+
 
 def getTopItems(inp_dict, topN=20): #given input dict, return list of top N items (default 20)
     outp_list=sorted(inp_dict, key=inp_dict.get  , reverse=True)
@@ -51,7 +51,7 @@ def main():
     # purge duplicate listings by checking cache
     listings_serial = []
     for listing_url in url_list:
-        politelyWait()
+        politely_wait()
         listing_html = IndeedListing().get_listing_html(listing_url)
         listing_dict = IndeedPostInfoExtractor().parse_html(listing_html)
         
