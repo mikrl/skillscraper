@@ -4,11 +4,11 @@ import logging
 
 import sqlite3
 
-from .aggregator import map_ngrams, reduce_ngrams
-from .listing import IndeedListing
-from .html_utils import IndeedPostInfoExtractor, IndeedSearchExtractor
-from .search import IndeedSearch
-from .storage import CacheConnection, Caches
+from aggregator import map_ngrams, reduce_ngrams
+from listing import IndeedListing
+from html_utils import IndeedPostInfoExtractor, IndeedSearchExtractor
+from search import IndeedSearch
+from storage import ListingCache, Caches
 
 REQUEST_DELAY = 1.0 #request delay in seconds
 LOGGER = logging.getLogger("main")
@@ -25,6 +25,7 @@ def getTopItems(inp_dict, topN=20): #given input dict, return list of top N item
     return outp_list[:topN]
 
 def main():
+    breakpoint()
     print("[*]Initializing search")
 
     results_per_page = 15
@@ -38,24 +39,27 @@ def main():
                        "lim": str(results_per_page),
                        "sort": "date"}
 
-    cache = CacheConnection()
+    listing_cache = ListingCache()
     
     first_page_search_html = search.get_search_html(waterloo_search)    
     url_list = IndeedSearchExtractor().get_listing_urls(raw_html=first_page_search_html)
     num_results = IndeedSearchExtractor().get_result_count(raw_html=first_page_search_html)
         
-    cached = [cache.cache_listing(listing_url) for listing_url in url_list]
+    cached = [listing_cache.cache_listing(listing_url)
+              for listing_url in url_list]
     unique_listings = [cached_url[0] for cached_url in zip(url_list, cached) if cached_url[1]]
     
     if len(cached) > len(unique_listings):
-        LOGGER.debug("Ignored %s duplicate listings." % len(cached) - len(unique_listings))
+        LOGGER.info("Ignored %s cached listings." % len(cached) - len(unique_listings))
         
         
     breakpoint()
     url_batch_size = len(url_list)
     if url_batch_size != results_per_page:
-        print("[!] {0} URLs retrieved but lim={1}".format(url_batch_size,
-                                                          results_per_page))
+        LOGGER.warning("{0} URLs retrieved but lim={1}.".format(url_batch_size,
+                                                             results_per_page))
+        LOGGER.info("Reducing results_per_page to {0} from {1}".format(url_batch_size,
+                                                                       results_per_page))
         results_per_page = url_batch_size
     # Only search the first page for now
     print("[*]{0} results reported. Searched the first {1}".format(num_results, url_batch_size))

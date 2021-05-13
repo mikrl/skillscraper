@@ -3,6 +3,7 @@ import logging
 
 import pymongo
 import redis
+import rq
 
 
 MONGO_HOST = "db"
@@ -15,43 +16,61 @@ REDIS_PORT = "6379"  # default 6379
 
 class Caches(Enum):
     LISTINGS = 0
-    NGRAMS = 1
+    PARSE_JOB = 1
+    NGRAMS = 2
+
+def enqueue_parse_job(job_fn, job_input):
+    queue = rq.Queue(connection=redis.Redis(host=REDIS_HOST,
+                                            port=REDIS_PORT,
+                                            db=Caches.PARSE_JOB))
+    result = queue.enqueue(job_fn, job_input)
+    
+
+    
+class GenericCache:
+
+    def __init__(self, cache_id):
+        self._logger = logging.getLogger("redis")
+        self._cache_id = cache_id
 
 
-class CacheConnection:
+    def write_cache(self, key, val):
+        cache = redis.Redis(host=REDIS_HOST,
+                            port=REDIS_PORT,
+                            db=self._cache_id)
+        return cache.set(key,val)
+
+
+    def read_cache(self, key):
+        cache = redis.Redis(host=REDIS_HOST,
+                            port=REDIS_PORT,
+                            db=self._cache_id)
+        return cache.get(key)
+    
+class ListingCache(GenericCache):
 
     def __init__(self):
-        self._logger = logging.getLogger("redis")
-        self._caches = {}
-        self._connect_to_cache(cache_id=Caches.LISTINGS)
-        self._connect_to_cache(cache_id=Caches.NGRAMS)
-
-    def _connect_to_cache(self, db):
-        cache_conn = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=db)
-        self._caches.update({db: cache_conn})
+        super().__init__(cache_id=Caches.LISTINGS.value)
     
     def cache_listing(self, key):
         if not self._cache_contains_listing(key):
-            return self._write_cache(key, 1, db=Caches.LISTINGS)
+            return self.write_cache(key, 1)
         self._logger.debug("Tried to cache a duplicate listing")
         return None
 
-
-    def cache_ngrams(self, key, val):
-        return self._write_cache(key, val, db=Caches.NGRAMS)    
-
     def _cache_contains_listing(self, key):
-        if self._read_cache(key, db=Caches.LISTINGS):
+        if self.read_cache(key):
             return True
         return False
 
-    def _write_cache(self, key, val, db):
-        return self._caches[db].set(key, val)
+
+class NGramCache(GenericCache):
     
-    
-    def _read_cache(self, key, db):
-        self._caches[db].get(key)
-    
+    def __init__(self):
+        super().__init__(cache_id=Caches.NGRAMS.value)
+        
+    def cache_ngrams(self, key, val):
+        return self.write_cache(key, val)
 
 class DatabaseConnection:
     def __init__(self):
