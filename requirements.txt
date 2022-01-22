@@ -9,7 +9,7 @@ ipython==7.16.3
 ipython-genutils==0.2.0
 jedi==0.15.1
 lxml==4.6.5
-nltk==3.4.5
+nltk==3.6.6
 parso==0.5.2
 pexpect==4.7.0
 pickleshare==0.7.5
