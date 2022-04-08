@@ -1,9 +1,7 @@
-from unittest import TestCase
-
-import skillscraper
+from skillscraper.aggregator import ListingAggregator
 
 
-class TestAggregator(TestCase):
+class TestListingAggregator:
     tdict = {"a": 5, "b": 3}
     testlst = ["a", "b", "c"]
 
