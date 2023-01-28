@@ -1,0 +1,13 @@
+{
+    "search name" : "basic SWE search within 15km of Waterloo, ON",
+    "search_parameters" : {
+	"and": "software+engineer",
+	"jt": "all",
+	"rad": "15",
+	"loc": "Waterloo%2C+ON",
+	"age": "any",
+	"lim": "15",
+	"sort": "date"
+    }
+    
+}
