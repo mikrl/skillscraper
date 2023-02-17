@@ -1,5 +1,3 @@
-Released under v3 of the GGPL
-
 This project is a web scraper for indeed.ca that enumerates all
 possible ngrams over a search and returns the top 20 monograms to quadgrams.
 
