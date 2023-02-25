@@ -2,6 +2,7 @@ from typing import List
 
 from nltk.util import ngrams
 
+
 def map_ngrams(inp_data, n: int) -> List[dict[str, int]]:
     """
     Turns the input string into a dict of ngrams with count 1.
@@ -11,6 +12,7 @@ def map_ngrams(inp_data, n: int) -> List[dict[str, int]]:
 
     input_ngrams = ngrams(inp_list, n, pad_left=False, pad_right=False)
     return [{" ".join(ngram): 1} for ngram in input_ngrams]
+
 
 def reduce_ngrams(inp_data: List[dict[str, int]]) -> dict[str, int]:
     """
