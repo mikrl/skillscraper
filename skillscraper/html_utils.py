@@ -1,66 +1,84 @@
+import logging
+import re
+
 from bs4 import BeautifulSoup
 
-import re
-import string
 
 class IndeedSearchExtractor:
+    def __init__(self, raw_html):
+        self.parser = BeautifulSoup(raw_html, "lxml")
+        self.url_list = []
 
-    def get_listing_urls(self, raw_html):
+    def get_listing_jk(self):
         """
         Grabs the URLs of every job listing shown on a search.
         """
-        self.url_list = []
-    
-        soup = BeautifulSoup(raw_html, 'html.parser')
-        listings = soup.findAll("div", {"data-tn-component":"organicJob"})
 
-        for listing in listings:
-            jk = listing["data-jk"]
-            listing_url = "https://ca.indeed.com/viewjob?jk={}".format(jk)
-            self.url_list.append(listing_url)
-        
-        return self.url_list
+        soup = self.parser
+        all_links = soup.find_all("a")
+        jk_tags = [link.attrs.get("data-jk") for link in all_links]
+        return [jk for jk in jk_tags if jk is not None]
 
-    def get_result_count(self, raw_html):
-        soup = BeautifulSoup(raw_html, 'html.parser')
-        result_count = soup.find("div", {"id":"searchCountPages"}).contents[0].split()
-        if not (result_count[0] == 'Page' and
-                result_count[1].isnumeric() and
-                result_count[2] == 'of' and
-                result_count[3].isnumeric() and
-                result_count[4] == 'jobs'):                
-            raise NotImplementedError("Format of result count changed. \
-            Cannot parse total number of search results.")
+    def get_total_jobs(self):
+        total_jobs_tag = re.compile("^(\d*\.?\d+|\d{1,3}(,\d{3})*(\.\d+)?) jobs$")
+        soup = self.parser
+        total_jobs = soup.find(text=total_jobs_tag).split()[0]
+        return total_jobs
 
-        self.result_count = int(result_count[3].replace(",",""))
-        return self.result_count
-    
+    def get_current_page_number(self):
+        soup = self.parser
+        current_page = soup.find(
+            "button", {"data-testid": "pagination-page-current"}
+        ).get_text()
+        return current_page
+
+    def get_next_page_url(self):
+        soup = self.parser
+        next_page = soup.find("a", {"aria-label": "Next Page"}).attrs.get("href")
+
+        if next_page is None:
+            logging.warning("Failure in get_next_page_url parsing!")
+
+        return next_page
+
+
 class IndeedPostInfoExtractor:
+    def __init__(self, raw_html):
+        self.parser = BeautifulSoup(raw_html, "lxml", from_encoding="utf-8")
+        self.title = self.get_job_title()
+        self.company = self.get_job_company()
+        self.content = self.get_job_description()
 
-    def get_job_title(self, raw_html):
-        soup = BeautifulSoup(raw_html, 'lxml', from_encoding='utf-8')
-        job_title = soup.find(["h1", "h2", "h3"], {"class":re.compile("JobInfoHeader-title")}).get_text()
-        job_title_clean = job_title.translate(str.maketrans('', '', string.punctuation))
-        return job_title_clean
+    def get_job_title(self):
+        soup = self.parser
+        job_title = soup.find("span", role="text").get_text()
 
-    def get_job_company(self, raw_html):
-        soup = BeautifulSoup(raw_html, 'lxml', from_encoding='utf-8')
-        job_company = soup.find("div", {"class":re.compile("icl-u-lg-mr")}).get_text()
-        job_company_clean = job_company.translate(str.maketrans('', '', string.punctuation))
-        return job_company_clean
+        if job_title is None:
+            logging.warning("Failure in get_job_title parsing!")
 
-    def get_job_description(self, raw_html):
-        soup = BeautifulSoup(raw_html, 'lxml', from_encoding='utf-8')
-        job_description_div = soup.find("div", {"class":re.compile("JobComponent-description")})
-        job_description = " ".join([par.text for par in job_description_div.findAll('p')])
-        job_description_clean = job_description.translate(str.maketrans('', '', string.punctuation))
-        return job_description_clean
+        return job_title
 
-    def parse_html(self, raw_html:str) -> dict[str, str]:
-        """ 
+    def get_job_company(self):
+        soup = self.parser
+        job_company = soup.find("div", {"data-company-name": "true"}).get_text()
+
+        if job_company is None:
+            logging.warning("Failure in get_job_company parsing!")
+
+        return job_company
+
+    def get_job_description(self):
+        soup = self.parser
+        job_description = soup.find("div", id="jobDescriptionText").get_text()
+
+        if job_description is None:
+            logging.warning("Failure in get_job_description parsing!")
+
+        return job_description
+
+    def get_listing_dict(self) -> dict[str, str]:
+        """
         Turns listing HTML into a dictionary representation of the listing,
         with the job title, company and job description.
         """
-        return {"title": self.get_job_title(raw_html),
-                "company": self.get_job_company(raw_html),
-                "content": self.get_job_description(raw_html)}
+        return {"title": self.title, "company": self.company, "content": self.content}
