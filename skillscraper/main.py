@@ -45,7 +45,7 @@ def main():
                        "sort": "date"}
 
     first_page_search_html = search.get_search_html(waterloo_search)    
-    url_list = IndeedSearchExtractor().get_listing_urls(raw_html=first_page_search_html)
+    url_list = IndeedSearchExtractor().get_listing_jk(raw_html=first_page_search_html)
     num_results = IndeedSearchExtractor().get_result_count(raw_html=first_page_search_html)
 
 
