@@ -1,8 +1,4 @@
-beautifulsoup4==4.11.0
-cloudscraper==1.2.68
-fastapi==0.79.1
-nltk==3.7
-pymongo==4.1.0
-redis==4.2.2
-requests==2.27.1
-rq==1.10.1
+beautifulsoup4==4.11.2
+cloudscraper==1.2.69
+lxml==4.9.2
+nltk==3.8.1
