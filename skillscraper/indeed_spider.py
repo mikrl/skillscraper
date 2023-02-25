@@ -1,20 +1,10 @@
 import logging
-import random
-import time
 
 import cloudscraper
 
-from html_utils import IndeedPostInfoExtractor, IndeedSearchExtractor
-from scrape_utils import IndeedSite, debug_requests
-
-
-def wait_plus_jitter(t):
-    jitter = random.gauss()
-    time.sleep(t+jitter)
-    return t+jitter
-
-class SimpleSpider:
-    def __init__(self, job_title, location, field=None, *args, **kwargs):
+from scrape_utils import IndeedSite, wait_plus_jitter
+class IndeedSpider:
+    def __init__(self, job_title, location, max_pages=1, field=None, *args, **kwargs):
         self.indeed = IndeedSite('https://', 'ca.indeed.com')
 
         
@@ -22,7 +12,7 @@ class SimpleSpider:
         self.listing_urls = set({})
         self.results = []
 
-        self.max_pages = 1
+        self.max_pages = max_pages
         self.on_page = 0
 
 
@@ -36,39 +26,42 @@ class SimpleSpider:
 
     def crawl(self):
         while self.on_page < self.max_pages:
-            response = self.make_request(self.search_url)
-            self.extract_listings(response)
+            self.extract_listings_to_process(self.search_url)
+            logging.info(f"Processed listings on page {self.on_page} out of {self.max_pages}")
             self.on_page +=1    
-        
         self.process_listings()
 
+    def extract_listings_to_process(self, search_url):
+        response = self.make_request(self.search_url)
+        self.extract_listings(response)
+
     def make_request(self, url):
-        with debug_requests(logging.INFO):
-            response = self.scraper.get(url)
+        response = self.scraper.get(url)
+        logging.info(f"HTTP [{response.status_code}] {response.reason} {response.url}")
         wait_plus_jitter(5)
         return response
 
     def extract_listings(self, response):
-        search_parser = IndeedSearchExtractor(response.content)
-        listing_jk =  search_parser.get_listing_jk()
+        listing_jk = self.indeed.get_listings_from_search_page(response.content)
         self.listing_urls |= {self.indeed.get_job_post_url(jk) for jk in listing_jk}
-        self.search_url = search_parser.get_next_page()        
+        self.search_url = self.indeed.next_page       
 
     def process_listings(self):
+        logging.debug(f"Processing the following: {' '.join(self.listing_urls)}")
         for url in self.listing_urls:
             response = self.make_request(url)
-            listing_parser = IndeedPostInfoExtractor(response.content)
-            parsed_listing = listing_parser.get_listing_dict()
-            print(parsed_listing)
+            parsed_listing = self.indeed.parse_listing_to_dict(response.content)
+            logging.info(f"Extracted {parsed_listing.get('title')} at {parsed_listing.get('company')} at {url}")
             self.results.append(parsed_listing)
+
 
 
 
 if __name__ == '__main__':
     job_title = "Software Developer" 
     location = "Waterloo,ON"
-    
-    spider = SimpleSpider(job_title, location)
+    logging.basicConfig(level=logging.INFO)
+    spider = IndeedSpider(job_title, location)
     spider.crawl()
     for result in spider.results:
         print(result)
