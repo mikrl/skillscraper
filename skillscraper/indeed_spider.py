@@ -1,8 +1,9 @@
 import logging
+import json
 
 import cloudscraper
 
-from scrape_utils import IndeedSite, wait_plus_jitter
+from skillscraper.scrape_utils import IndeedSite, wait_plus_jitter
 class IndeedSpider:
     def __init__(self, job_title, location, max_pages=1, field=None, *args, **kwargs):
         self.indeed = IndeedSite('https://', 'ca.indeed.com')
@@ -27,12 +28,12 @@ class IndeedSpider:
     def crawl(self):
         while self.on_page < self.max_pages:
             self.extract_listings_to_process(self.search_url)
-            logging.info(f"Processed listings on page {self.on_page} out of {self.max_pages}")
+            logging.info(f"Processed listings on page {self.on_page + 1} out of {self.max_pages}")
             self.on_page +=1    
         self.process_listings()
 
-    def extract_listings_to_process(self, search_url):
-        response = self.make_request(self.search_url)
+    def extract_listings_to_process(self, url):
+        response = self.make_request(url)
         self.extract_listings(response)
 
     def make_request(self, url):
@@ -52,9 +53,16 @@ class IndeedSpider:
             response = self.make_request(url)
             parsed_listing = self.indeed.parse_listing_to_dict(response.content)
             logging.info(f"Extracted {parsed_listing.get('title')} at {parsed_listing.get('company')} at {url}")
-            self.results.append(parsed_listing)
+            self.results.append({"url": url} | parsed_listing)
 
-
+    def get_serialized_results(self, *args, **kwargs):
+        return json.dumps(self.results, *args, **kwargs)
+    
+    def save(self, filename):
+        results = self.get_serialized_results(indent=4)
+        with open(filename, 'w') as result_file:
+            result_file.write(results)
+        logging.info(f"Wrote results to {filename}")
 
 
 if __name__ == '__main__':
@@ -63,5 +71,4 @@ if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     spider = IndeedSpider(job_title, location)
     spider.crawl()
-    for result in spider.results:
-        print(result)
+    spider.save('./swe_waterloo_poc.json')

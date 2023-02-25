@@ -1,22 +1,9 @@
-import contextlib
 import logging
 import urllib.parse
-from http.client import HTTPConnection
 import random
 import time
 
-from html_utils import IndeedSearchExtractor, IndeedPostInfoExtractor
-
-
-def debug_requests_on(loglevel=logging.DEBUG):
-    '''Switches on logging of the requests module.'''
-    HTTPConnection.debuglevel = 0
-
-    logging.basicConfig()
-    logging.getLogger().setLevel(loglevel)
-    requests_log = logging.getLogger("requests.packages.urllib3")
-    requests_log.setLevel(loglevel)
-    requests_log.propagate = True
+from skillscraper.html_utils import IndeedSearchExtractor, IndeedPostInfoExtractor
 
 def wait_plus_jitter(t):
     jitter = random.gauss()
