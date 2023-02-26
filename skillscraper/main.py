@@ -38,14 +38,14 @@ def main(job_title: str, location: str, outfile: Optional[str] = None, scrape_on
 
 if __name__ == "__main__":
     # Define command line arguments
-    parser = argparse.ArgumentParser(description='Scrape job postings.')
+    parser = argparse.ArgumentParser(description='Scrape job postings from the internet and turn them into ngrams.')
     parser.add_argument('title', metavar='title', type=str, help='Job title to search for')
-    parser.add_argument('location', metavar='location', type=str, help='Job location to search in')
-    parser.add_argument('-v', '--verbosity', type=int, default=0,
+    parser.add_argument('location', metavar='location', type=str, help='Location to search in')
+    parser.add_argument('-v', '--verbosity', type=int, default=1,
                         help='verbosity level (0 = WARNING, 1 = INFO, 2 = DEBUG)')
     parser.add_argument('-o', '--output', type=str, default='',
                         help='Output file path. If not specified, results will be printed to the terminal')
-    parser.add_argument("--scrape-only", action="store_true", help="Only scrape and do not process the output further")
+    parser.add_argument("--scrape-only", action="store_true", help="Only scrape the jobs and do not process the output further. Will save jobs if outfile is specified")
 
     # Parse arguments and call main function
     args = parser.parse_args()
