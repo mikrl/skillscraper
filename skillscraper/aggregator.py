@@ -8,6 +8,23 @@ from skillscraper.nlp_utils import map_ngrams, reduce_ngrams
 class Aggregator:
     def __init__(self, results=None):
         self.results = json.loads(results) if results else results
+        self.ngrams = {}
+
+    def process_results(self, upto_n = 4):
+        logging.info(f"Extracting all n-grams up to n={upto_n}")
+        for i in range(upto_n):
+            n = i+1
+            key = f"{n}-grams"
+            self.ngrams.update({key: self.get_ngrams(n)})
+
+    def get_serialized_results(self, *args, **kwargs):
+        return json.dumps(self.ngrams, *args, **kwargs)
+
+    def save(self, filename):
+        results = self.get_serialized_results(indent=4)
+        with open(filename, "w") as result_file:
+            result_file.write(results)
+        logging.info(f"Wrote results to {filename}")
 
     def get_ngrams(self, n):
         ngram_list = []
